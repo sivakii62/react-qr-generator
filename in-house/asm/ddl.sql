@@ -28,6 +28,15 @@ CREATE TABLE asset_type (
 );
 
 -- =============================
+-- License Type (e.g., Laptop, Monitor)
+-- =============================
+CREATE TABLE license_type (
+    sid UUID PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    category_sid UUID REFERENCES license_category_master(sid)
+);
+
+-- =============================
 -- Vendor (suppliers, warranty partners)
 -- =============================
 CREATE TABLE vendor (
@@ -39,7 +48,8 @@ CREATE TABLE vendor (
     phone_number VARCHAR(50),
     location TEXT,
     remarks TEXT,
-    category_sid UUID REFERENCES asset_category_master(sid)
+    asset_category_sid UUID REFERENCES asset_category_master(sid),
+    license_category_sid UUID REFERENCES license_category_master(sid)
 );
 
 -- =============================
@@ -81,11 +91,6 @@ CREATE TABLE asset (
     serial_number VARCHAR(50) UNIQUE,
     service_tag VARCHAR(50),
     purchase_date DATE,
-    assigned_to UUID REFERENCES employee(sid),
-    assigned_date_of_current_user DATE,
-    previous_user_id UUID REFERENCES employee(sid),
-    return_date_of_previous_user DATE,
-    reason_of_return TEXT,
     scrapped_date DATE,
     asset_type_name VARCHAR(255) REFERENCES asset_type(name)
 );
@@ -114,17 +119,6 @@ CREATE TABLE asset_insurance (
     insurance_start_date DATE,
     insurance_end_date DATE,
     notification_required BOOLEAN
-);
-
--- =============================
--- Asset Warranty Details
--- =============================
-CREATE TABLE asset_warranty (
-    sid UUID PRIMARY KEY,
-    asset_code VARCHAR(50) UNIQUE NOT NULL REFERENCES asset(asset_code),
-    warranty_partner_id VARCHAR(255) REFERENCES vendor(vendor_id),
-    warranty_status TEXT,
-    warranty_expiry_date DATE
 );
 
 -- =============================
@@ -186,11 +180,9 @@ CREATE TABLE accessory (
 -- =============================
 CREATE TABLE license (
     sid UUID PRIMARY KEY,
-    license_id BIGSERIAL UNIQUE NOT NULL,
+    license_id VARCHAR(100) UNIQUE NOT NULL,
     license_name VARCHAR(100),
-    license_type VARCHAR(50) REFERENCES asset_type(name),
-    category_sid UUID REFERENCES license_category_master(sid),
-    asset_category_sid UUID REFERENCES asset_category_master(sid),
+    license_type VARCHAR(50) REFERENCES license_type(name),
     vendor_id VARCHAR(255) REFERENCES vendor(vendor_id),
     vendor_name VARCHAR(50),
     vendor_email VARCHAR(120),
@@ -211,12 +203,13 @@ CREATE TABLE license (
 -- =============================
 CREATE TABLE asset_assignment (
     sid UUID PRIMARY KEY,
-    asset_code VARCHAR(50) NOT NULL REFERENCES asset(asset_code),
+    asset_sid UUID NOT NULL REFERENCES asset(sid),
     employee_sid UUID NOT NULL REFERENCES employee(sid),
     assigned_by UUID REFERENCES application_user(sid),
     approved_by UUID REFERENCES employee(sid),
-    assigned_date DATE,
+    assigned_date DATE NOT NULL,
     return_date DATE,
+    reason_of_return TEXT,
     remarks TEXT
 );
 
@@ -227,7 +220,6 @@ CREATE TABLE replacement_detail (
     sid UUID PRIMARY KEY,
     replacement_id BIGSERIAL UNIQUE NOT NULL,
     asset_code VARCHAR(50) NOT NULL REFERENCES asset(asset_code),
-    pid UUID REFERENCES asset(sid),
     change_date DATE,
     changed_parts TEXT,
     replacement_cost DOUBLE PRECISION,
@@ -235,16 +227,25 @@ CREATE TABLE replacement_detail (
 );
 
 -- =============================
--- Warranty/AMC Renewals
+-- Asset Warranty Details
+-- =============================
+CREATE TABLE asset_warranty (
+    sid UUID PRIMARY KEY,
+    warranty_id VARCHAR(100) UNIQUE NOT NULL,
+    asset_sid UUID NOT NULL REFERENCES asset(sid) UNIQUE,
+    warranty_partner_sid UUID REFERENCES vendor(sid),
+    warranty_status VARCHAR(50),
+    warranty_expiry_date DATE
+);
+
+-- =============================
+-- Warranty AMC Renewals
 -- =============================
 CREATE TABLE warranty_amc (
     sid UUID PRIMARY KEY,
-    warranty_id BIGSERIAL UNIQUE NOT NULL,
-    asset_sid UUID NOT NULL REFERENCES asset(sid),
+    asset_warranty_sid UUID NOT NULL REFERENCES asset_warranty(sid),
     renewal_partner_sid UUID NOT NULL REFERENCES vendor(sid),
-    price DOUBLE PRECISION,
-    renewal_date DATE,
-    renewal_expiry DATE
+    price DOUBLE PRECISION
 );
 
 -- =============================
