@@ -39,7 +39,7 @@ CREATE TABLE license_type (
 -- =============================
 CREATE TABLE financial_category_master (
     sid UUID PRIMARY KEY,
-    name VARCHAR(150) UNIQUE NOT NULL,
+    name VARCHAR(150) UNIQUE NOT NULL
 );
 
 -- =============================
@@ -258,7 +258,7 @@ CREATE TABLE warranty_amc (
     warranty_partner_sid UUID NOT NULL REFERENCES vendor(sid),
     renewal_partner_sid UUID NOT NULL REFERENCES vendor(sid),
     warranty_status VARCHAR(50),
-    warranty_expiry_date DATE
+    warranty_expiry_date DATE,
     price DOUBLE PRECISION
 );
 
