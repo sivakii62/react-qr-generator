@@ -1,5 +1,5 @@
 -- =============================
--- Asset Category (e.g., IT, Non-IT)
+-- Asset Category
 -- =============================
 CREATE TABLE asset_category_master (
     sid UUID PRIMARY KEY,
@@ -19,7 +19,7 @@ CREATE TABLE license_category_master (
 );
 
 -- =============================
--- Asset Type (e.g., Laptop, Monitor)
+-- Asset Type
 -- =============================
 CREATE TABLE asset_type (
     sid UUID PRIMARY KEY,
@@ -28,7 +28,7 @@ CREATE TABLE asset_type (
 );
 
 -- =============================
--- License Type (e.g., Laptop, Monitor)
+-- License Type
 -- =============================
 CREATE TABLE license_type (
     sid UUID PRIMARY KEY,
@@ -42,14 +42,32 @@ CREATE TABLE license_type (
 CREATE TABLE vendor (
     sid UUID PRIMARY KEY,
     vendor_id VARCHAR(255) UNIQUE NOT NULL,
-    vendor_name VARCHAR(50),
+    vendor_name VARCHAR(100) NOT NULL,
     contact_person VARCHAR(100),
     email VARCHAR(120),
     phone_number VARCHAR(50),
     location TEXT,
-    remarks TEXT,
-    asset_category_sid UUID REFERENCES asset_category_master(sid),
-    license_category_sid UUID REFERENCES license_category_master(sid)
+    remarks TEXT
+);
+
+-- =============================
+-- Junction table for Vendor & Asset Category
+-- =============================
+CREATE TABLE vendor_asset_category (
+    sid UUID PRIMARY KEY,
+    vendor_sid UUID NOT NULL REFERENCES vendor(sid) ON DELETE CASCADE,
+    asset_category_sid UUID NOT NULL REFERENCES asset_category_master(sid) ON DELETE CASCADE,
+    UNIQUE (vendor_sid, asset_category_sid)
+);
+
+-- =============================
+-- Junction table for Vendor & License Category
+-- =============================
+CREATE TABLE vendor_license_category (
+    sid UUID PRIMARY KEY,
+    vendor_sid UUID NOT NULL REFERENCES vendor(sid) ON DELETE CASCADE,
+    license_category_sid UUID NOT NULL REFERENCES license_category_master(sid) ON DELETE CASCADE,
+    UNIQUE (vendor_sid, license_category_sid)
 );
 
 -- =============================
