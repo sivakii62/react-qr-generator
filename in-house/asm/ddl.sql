@@ -110,7 +110,7 @@ CREATE TABLE asset (
     service_tag VARCHAR(50),
     purchase_date DATE,
     scrapped_date DATE,
-    asset_type_name VARCHAR(255) REFERENCES asset_type(name)
+    asset_type_sid UUID REFERENCES asset_type(sid)  -- CHANGED: was name
 );
 
 -- =============================
@@ -118,12 +118,12 @@ CREATE TABLE asset (
 -- =============================
 CREATE TABLE asset_financial (
     sid UUID PRIMARY KEY,
-    asset_code VARCHAR(50) UNIQUE NOT NULL REFERENCES asset(asset_code),
+    asset_sid UUID UNIQUE NOT NULL REFERENCES asset(sid),  -- CHANGED: from asset_code
     purchase_cost DOUBLE PRECISION,
     residual_value DOUBLE PRECISION,
     depreciation_rate DOUBLE PRECISION,
     invoice_number VARCHAR(50),
-    purchase_vendor_id VARCHAR(255) REFERENCES vendor(vendor_id),
+    purchase_vendor_sid UUID REFERENCES vendor(sid),  -- CHANGED: from vendor_id
     financial_category_sid UUID REFERENCES asset_category_master(sid)
 );
 
@@ -132,7 +132,7 @@ CREATE TABLE asset_financial (
 -- =============================
 CREATE TABLE asset_insurance (
     sid UUID PRIMARY KEY,
-    asset_code VARCHAR(50) UNIQUE NOT NULL REFERENCES asset(asset_code),
+    asset_sid UUID UNIQUE NOT NULL REFERENCES asset(sid),  -- CHANGED: from asset_code
     is_insured BOOLEAN,
     insurance_start_date DATE,
     insurance_end_date DATE,
@@ -144,7 +144,7 @@ CREATE TABLE asset_insurance (
 -- =============================
 CREATE TABLE laptop (
     sid UUID PRIMARY KEY,
-    asset_code VARCHAR(50) UNIQUE NOT NULL REFERENCES asset(asset_code),
+    asset_sid UUID UNIQUE NOT NULL REFERENCES asset(sid),  -- CHANGED
     laptop_make VARCHAR(50),
     laptop_model VARCHAR(50),
     processor VARCHAR(50),
@@ -161,7 +161,7 @@ CREATE TABLE laptop (
 -- =============================
 CREATE TABLE mobile (
     sid UUID PRIMARY KEY,
-    asset_code VARCHAR(50) UNIQUE NOT NULL REFERENCES asset(asset_code),
+    asset_sid UUID UNIQUE NOT NULL REFERENCES asset(sid),  -- CHANGED
     brand VARCHAR(50),
     model VARCHAR(50),
     os VARCHAR(50),
@@ -175,7 +175,7 @@ CREATE TABLE mobile (
 -- =============================
 CREATE TABLE monitor (
     sid UUID PRIMARY KEY,
-    asset_code VARCHAR(50) UNIQUE NOT NULL REFERENCES asset(asset_code),
+    asset_sid UUID UNIQUE NOT NULL REFERENCES asset(sid),  -- CHANGED
     monitor_make VARCHAR(50),
     model VARCHAR(50),
     screen_size VARCHAR(50),
@@ -187,7 +187,7 @@ CREATE TABLE monitor (
 -- =============================
 CREATE TABLE accessory (
     sid UUID PRIMARY KEY,
-    asset_code VARCHAR(50) UNIQUE NOT NULL REFERENCES asset(asset_code),
+    asset_sid UUID UNIQUE NOT NULL REFERENCES asset(sid),  -- CHANGED
     model VARCHAR(50),
     specification TEXT,
     remarks TEXT
@@ -200,8 +200,8 @@ CREATE TABLE license (
     sid UUID PRIMARY KEY,
     license_id VARCHAR(100) UNIQUE NOT NULL,
     license_name VARCHAR(100),
-    license_type VARCHAR(50) REFERENCES license_type(name),
-    vendor_id VARCHAR(255) REFERENCES vendor(vendor_id),
+    license_type_sid UUID REFERENCES license_type(sid),  -- CHANGED: from name
+    vendor_sid UUID REFERENCES vendor(sid),              -- CHANGED: from vendor_id
     vendor_name VARCHAR(50),
     vendor_email VARCHAR(120),
     date_of_purchase DATE,
@@ -237,7 +237,7 @@ CREATE TABLE asset_assignment (
 CREATE TABLE replacement_detail (
     sid UUID PRIMARY KEY,
     replacement_id BIGSERIAL UNIQUE NOT NULL,
-    asset_code VARCHAR(50) NOT NULL REFERENCES asset(asset_code),
+    asset_sid UUID NOT NULL REFERENCES asset(sid),  -- CHANGED: from asset_code
     change_date DATE,
     changed_parts TEXT,
     replacement_cost DOUBLE PRECISION,
