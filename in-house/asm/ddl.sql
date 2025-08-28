@@ -3,8 +3,7 @@
 -- =============================
 CREATE TABLE asset_category_master (
     sid UUID PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
-    domain VARCHAR(50) NOT NULL,
+    name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT
 );
 
@@ -13,8 +12,7 @@ CREATE TABLE asset_category_master (
 -- =============================
 CREATE TABLE license_category_master (
     sid UUID PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
-    domain VARCHAR(50) NOT NULL,
+    name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT
 );
 
@@ -23,7 +21,7 @@ CREATE TABLE license_category_master (
 -- =============================
 CREATE TABLE asset_type (
     sid UUID PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(150) UNIQUE NOT NULL,
     category_sid UUID REFERENCES asset_category_master(sid)
 );
 
@@ -32,8 +30,16 @@ CREATE TABLE asset_type (
 -- =============================
 CREATE TABLE license_type (
     sid UUID PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(150) UNIQUE NOT NULL,
     category_sid UUID REFERENCES license_category_master(sid)
+);
+
+-- =============================
+-- Financial Category
+-- =============================
+CREATE TABLE financial_category_master (
+    sid UUID PRIMARY KEY,
+    name VARCHAR(150) UNIQUE NOT NULL,
 );
 
 -- =============================
@@ -41,7 +47,7 @@ CREATE TABLE license_type (
 -- =============================
 CREATE TABLE vendor (
     sid UUID PRIMARY KEY,
-    vendor_id VARCHAR(255) UNIQUE NOT NULL,
+    vendor_id VARCHAR(150) UNIQUE NOT NULL,
     vendor_name VARCHAR(100) NOT NULL,
     contact_person VARCHAR(100),
     email VARCHAR(120),
@@ -53,21 +59,21 @@ CREATE TABLE vendor (
 -- =============================
 -- Junction table for Vendor & Asset Category
 -- =============================
-CREATE TABLE vendor_asset_category (
+CREATE TABLE vendor_asset_type (
     sid UUID PRIMARY KEY,
     vendor_sid UUID NOT NULL REFERENCES vendor(sid) ON DELETE CASCADE,
-    asset_category_sid UUID NOT NULL REFERENCES asset_category_master(sid) ON DELETE CASCADE,
-    UNIQUE (vendor_sid, asset_category_sid)
+    asset_type_sid UUID NOT NULL REFERENCES asset_type(sid) ON DELETE CASCADE,
+    UNIQUE (vendor_sid, asset_type_sid)
 );
 
 -- =============================
 -- Junction table for Vendor & License Category
 -- =============================
-CREATE TABLE vendor_license_category (
+CREATE TABLE vendor_license_type (
     sid UUID PRIMARY KEY,
     vendor_sid UUID NOT NULL REFERENCES vendor(sid) ON DELETE CASCADE,
-    license_category_sid UUID NOT NULL REFERENCES license_category_master(sid) ON DELETE CASCADE,
-    UNIQUE (vendor_sid, license_category_sid)
+    license_type_sid UUID NOT NULL REFERENCES license_type(sid) ON DELETE CASCADE,
+    UNIQUE (vendor_sid, license_type_sid)
 );
 
 -- =============================
@@ -78,7 +84,7 @@ CREATE TABLE employee (
     employee_id VARCHAR(50) UNIQUE NOT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
-    email VARCHAR(120),
+    email VARCHAR(120) UNIQUE NOT NULL,
     is_active BOOLEAN
 );
 
@@ -104,7 +110,6 @@ CREATE TABLE asset (
     sid UUID PRIMARY KEY,
     asset_code VARCHAR(50) UNIQUE NOT NULL,
     asset_status VARCHAR(100),
-    category_sid UUID REFERENCES asset_category_master(sid),
     description TEXT,
     serial_number VARCHAR(50) UNIQUE,
     service_tag VARCHAR(50),
@@ -124,7 +129,7 @@ CREATE TABLE asset_financial (
     depreciation_rate DOUBLE PRECISION,
     invoice_number VARCHAR(50),
     purchase_vendor_sid UUID REFERENCES vendor(sid),  -- CHANGED: from vendor_id
-    financial_category_sid UUID REFERENCES asset_category_master(sid)
+    financial_category UUID REFERENCES financial_category_master(sid)
 );
 
 -- =============================
@@ -202,18 +207,17 @@ CREATE TABLE license (
     license_name VARCHAR(100),
     license_type_sid UUID REFERENCES license_type(sid),  -- CHANGED: from name
     vendor_sid UUID REFERENCES vendor(sid),              -- CHANGED: from vendor_id
-    vendor_name VARCHAR(50),
-    vendor_email VARCHAR(120),
     date_of_purchase DATE,
     date_of_activation DATE,
     license_end_date DATE,
     renewal_interval BIGINT,
-    renewal_term_type VARCHAR(255),
+    renewal_term_type VARCHAR(150),
     quantity BIGINT,
-    status VARCHAR(255),
+    status VARCHAR(150),
     notification_required BOOLEAN,
     invoice_number VARCHAR(50),
-    licensed_to_email VARCHAR(120)
+    financial_category UUID REFERENCES financial_category_master(sid),
+    licensed_to_email VARCHAR(120) REFERENCES employee(email)
 );
 
 -- =============================
@@ -236,8 +240,8 @@ CREATE TABLE asset_assignment (
 -- =============================
 CREATE TABLE replacement_detail (
     sid UUID PRIMARY KEY,
-    replacement_id BIGSERIAL UNIQUE NOT NULL,
-    asset_sid UUID NOT NULL REFERENCES asset(sid),  -- CHANGED: from asset_code
+    replacement_id VARCHAR(100) UNIQUE NOT NULL,
+    pid UUID NOT NULL REFERENCES asset(sid),  -- CHANGED: from asset_code
     change_date DATE,
     changed_parts TEXT,
     replacement_cost DOUBLE PRECISION,
@@ -245,24 +249,16 @@ CREATE TABLE replacement_detail (
 );
 
 -- =============================
--- Asset Warranty Details
--- =============================
-CREATE TABLE asset_warranty (
-    sid UUID PRIMARY KEY,
-    warranty_id VARCHAR(100) UNIQUE NOT NULL,
-    asset_sid UUID NOT NULL REFERENCES asset(sid) UNIQUE,
-    warranty_partner_sid UUID REFERENCES vendor(sid),
-    warranty_status VARCHAR(50),
-    warranty_expiry_date DATE
-);
-
--- =============================
 -- Warranty AMC Renewals
 -- =============================
 CREATE TABLE warranty_amc (
     sid UUID PRIMARY KEY,
-    asset_warranty_sid UUID NOT NULL REFERENCES asset_warranty(sid),
+    warranty_code VARCHAR(100) UNIQUE NOT NULL,
+    pid UUID NOT NULL REFERENCES asset(sid),
+    warranty_partner_sid UUID NOT NULL REFERENCES vendor(sid),
     renewal_partner_sid UUID NOT NULL REFERENCES vendor(sid),
+    warranty_status VARCHAR(50),
+    warranty_expiry_date DATE
     price DOUBLE PRECISION
 );
 
